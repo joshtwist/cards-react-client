@@ -132,7 +132,6 @@ class GameEngine {
     // we only return this if it matches the current game id
     return null;
   }
-
   
   createRequest(path, method, payload) {
     const url = new URL(path, this.domain);
@@ -171,7 +170,7 @@ class GameEngine {
     this.cards = cards;
     return cards;
   }
-  
+
   async createGame(payload) {
     const request = this.createRequest("/games", "POST", payload);
     const response = await fetch(request);
@@ -209,6 +208,44 @@ class GameEngine {
     localStorage.setItem(this.userIdKey, JSON.stringify(userObject));
     this.game = game;
 
+    return game;
+  }
+
+  async submitCard(card) {
+
+    const body = {
+      submittedCard: card.id,
+    };
+
+    const request = this.createRequest(`/games/${this.game.id}/submit`, "POST", body);
+    const response = await fetch(request);
+    const game = await response.json();
+
+    this.game = game;
+    return game;
+  }
+
+  async pickWinner(submission) {
+
+    const body = {
+      winningSubmissionId: submission.id,
+    }
+
+    const request = this.createRequest(`/games/${this.game.id}/pickWinner`, "POST", body);
+    const response = await fetch(request);
+    const game = await response.json();
+
+    this.game = game;
+    return game;
+  }
+
+  async nextRound(submission) {
+
+    const request = this.createRequest(`/games/${this.game.id}/nextRound`, "POST");
+    const response = await fetch(request);
+    const game = await response.json();
+
+    this.game = game;
     return game;
   }
 }
