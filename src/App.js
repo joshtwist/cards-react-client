@@ -14,6 +14,7 @@ class App extends React.Component {
     const gameEngine = new GameEngine();
     const result = await gameEngine.createGame({
       player: data,
+      minimumPlayers: 2
     });
 
     window.location.href = `/${result.id}`;

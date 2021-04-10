@@ -57,7 +57,7 @@ class OwnerWaiting extends React.Component {
         </p>
         <PlayersSoFarControl players={this.props.players} />
         <p>
-          {this.props.players.length > 1 && (
+          {this.props.players.length >= this.props.minimumPlayers && (
             <button onClick={this.startGame}>Start game</button>
           )}
         </p>
@@ -233,7 +233,7 @@ class PlayGame extends React.Component {
   }
 
   ownerWaiting(game, viewState) {
-    return <OwnerWaiting players={game.players} startGame={this.startGame} />;
+    return <OwnerWaiting players={game.players} startGame={this.startGame} minimumPlayers={game.minimumPlayers}/>;
   }
 
   newPlayerForm(game, viewState) {
