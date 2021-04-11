@@ -1,22 +1,13 @@
 class GameEngine {
   constructor() {
     this.domain = "https://cf_cards.molmorg.workers.dev/";
+    this.hostname = new URL(this.domain).host;
     this.userIdKey = "cards-userId";
     this.game = null;
     this.cards = null;
 
-    /*
-
-    path: /games
-    method: post
-    {
-      "player" : {
-          "name" : "Josh Twist",
-          "short" : "JT"
-      }
-    }
-
-    */
+    this.webSocket = null;
+    this.gameUpdatedHandlers = [];
   }
 
   /* There are several view-states post game creation
@@ -43,6 +34,65 @@ class GameEngine {
     Reveal - judge needs to press 'next round' (timer can do it too) - same view
 
   */
+
+  onGameUpdated(handler) {
+    this.gameUpdatedHandlers.push(handler);
+  }
+
+  join() {
+    const ws = new WebSocket(`wss://${this.hostname }/websocket/${this.game.id}`);
+    let rejoined = false;
+    const startTime = Date.now();
+
+    ws.addEventListener("open", (event) => {
+      this.webSocket = ws;
+    });
+
+    ws.addEventListener("message", (event) => {
+      const data = JSON.parse(event.data);
+      if (data.error) {
+        console.error(`WebSocket error: ${JSON.stringify(data.error)}`);
+        return;
+      }
+      this.game = data;
+      this.gameUpdatedHandlers.forEach(handler => {
+        handler(this.game);
+      });
+    });
+
+    ws.addEventListener("close", (event) => {
+      console.log("WebSocket closed, reconnecting:", event.code, event.reason);
+      rejoin();
+    });
+
+    ws.addEventListener("error", (event) => {
+      console.log("WebSocket  error, reconnecting:", event);
+      rejoin();
+    });
+
+    // TODO - write a backoff algorithm
+    const rejoin = async () => {
+      if (!rejoined) {
+        rejoined = true;
+        this.webSocket = null;
+
+        let timeSinceLastJoin = Date.now() - startTime;
+        if (timeSinceLastJoin < 5000) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, 5000 - timeSinceLastJoin)
+          );
+        }
+
+        this.join();
+      }
+    };
+  }
+
+  ensureWebSocket() {
+    if (!this.webSocket) {
+      this.join();
+    }
+  }
 
   evaluateViewState() {
     const game = this.game;
@@ -114,7 +164,6 @@ class GameEngine {
 
       default:
         const message = `Invalid game state: ${game.state}`;
-        alert(message);
         throw new Error(message);
     }
 
@@ -132,17 +181,17 @@ class GameEngine {
     // we only return this if it matches the current game id
     return null;
   }
-  
+
   createRequest(path, method, payload) {
     const url = new URL(path, this.domain);
     const init = {
       method: method,
-      headers: {}
+      headers: {},
     };
 
     if (payload) {
       init.body = JSON.stringify(payload);
-      init.headers["Content-Type"] = "application/json"
+      init.headers["Content-Type"] = "application/json";
     }
 
     const userObject = this.getUserObject();
@@ -192,11 +241,15 @@ class GameEngine {
     const game = await response.json();
 
     this.game = game;
-    return game; 
+    return game;
   }
 
   async joinGame(payload) {
-    const request = this.createRequest(`/games/${this.game.id}/join`, "POST", payload);
+    const request = this.createRequest(
+      `/games/${this.game.id}/join`,
+      "POST",
+      payload
+    );
     const response = await fetch(request);
     const game = await response.json();
 
@@ -212,12 +265,15 @@ class GameEngine {
   }
 
   async submitCard(card) {
-
     const body = {
       submittedCard: card.id,
     };
 
-    const request = this.createRequest(`/games/${this.game.id}/submit`, "POST", body);
+    const request = this.createRequest(
+      `/games/${this.game.id}/submit`,
+      "POST",
+      body
+    );
     const response = await fetch(request);
     const game = await response.json();
 
@@ -226,12 +282,15 @@ class GameEngine {
   }
 
   async pickWinner(submission) {
-
     const body = {
       winningSubmissionId: submission.id,
-    }
+    };
 
-    const request = this.createRequest(`/games/${this.game.id}/pickWinner`, "POST", body);
+    const request = this.createRequest(
+      `/games/${this.game.id}/pickWinner`,
+      "POST",
+      body
+    );
     const response = await fetch(request);
     const game = await response.json();
 
@@ -240,8 +299,10 @@ class GameEngine {
   }
 
   async nextRound(submission) {
-
-    const request = this.createRequest(`/games/${this.game.id}/nextRound`, "POST");
+    const request = this.createRequest(
+      `/games/${this.game.id}/nextRound`,
+      "POST"
+    );
     const response = await fetch(request);
     const game = await response.json();
 

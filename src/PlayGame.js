@@ -78,7 +78,7 @@ class Players extends React.Component {
   }
 
   isJudge(player) {
-    if (!this.props.game) return false; 
+    if (!this.props.game) return false;
     const game = this.props.game;
     const match = game.players.indexOf(player) === game.currentJudgeIndex;
     return match;
@@ -95,18 +95,17 @@ class Players extends React.Component {
   }
 
   render() {
-
     var that = this;
 
     function JudgeBadge(player) {
       if (that.isJudge(player)) {
-        return <b>J</b>
+        return <b>J</b>;
       }
     }
 
     function SubmittedBadge(player) {
       if (that.hasSubmitted(player)) {
-        return <i>S</i>
+        return <i>S</i>;
       }
     }
 
@@ -118,11 +117,13 @@ class Players extends React.Component {
 
     return (
       <ul>
-        {players.map((p) => { return (
-          <li key={p.id} tooltip={p.name}>
-            {p.short} ({p.score}) {JudgeBadge(p)}
-            {SubmittedBadge(p)}
-          </li>)
+        {players.map((p) => {
+          return (
+            <li key={p.id} tooltip={p.name}>
+              {p.short} ({p.score}) {JudgeBadge(p)}
+              {SubmittedBadge(p)}
+            </li>
+          );
         })}
       </ul>
     );
@@ -130,8 +131,10 @@ class Players extends React.Component {
 }
 
 function autoBind(instance) {
-  const props = Object.getOwnPropertyNames(Object.getPrototypeOf(instance)).filter(p => typeof instance[p] === 'function');
-  props.forEach(p => instance[p] = instance[p].bind(instance));
+  const props = Object.getOwnPropertyNames(
+    Object.getPrototypeOf(instance)
+  ).filter((p) => typeof instance[p] === "function");
+  props.forEach((p) => (instance[p] = instance[p].bind(instance)));
 }
 
 class PlayGame extends React.Component {
@@ -144,6 +147,9 @@ class PlayGame extends React.Component {
     };
 
     this.gameEngine = new GameEngine();
+    this.gameEngine.onGameUpdated((game) => {
+      this.refreshViewState({ game });
+    });
 
     autoBind(this);
   }
@@ -166,74 +172,60 @@ class PlayGame extends React.Component {
       this.gameEngine.getCards(),
     ]);
 
-    this.setState({
+    this.refreshViewState({
       isLoading: false,
       game: game,
       cards: cards,
     });
-
-    this.refreshViewState();
   }
 
-  refreshViewState() {
+  refreshViewState(state) {
+    let viewState = {};
     // if game state not loaded yet, no point setting up viewState
-    if (!this.state.game) {
-      return;
+    if (this.state.game || state.game) {
+      viewState = this.gameEngine.evaluateViewState();
     }
-    const viewState = this.gameEngine.evaluateViewState();
-    this.setState({
-      viewState: viewState,
-    });
+    const newState = Object.assign({ viewState: viewState }, state);
+    this.setState(newState);
   }
 
   async joinGame(player) {
     const game = await this.gameEngine.joinGame({ player: player });
-    this.setState({
-      game: game,
-    });
 
-    this.refreshViewState();
+    this.refreshViewState({ game });
   }
 
   async startGame() {
     const game = await this.gameEngine.startGame();
-    this.setState({
-      game: game,
-    });
-
-    this.refreshViewState();
+    this.refreshViewState({ game });
   }
 
   async nextRound() {
     const game = await this.gameEngine.nextRound();
-    this.setState({
-      game: game,
-    });
-
-    this.refreshViewState();
+    this.refreshViewState( { game });
   }
 
   async cardSelected(card) {
     const viewState = this.state.viewState.state;
     if (viewState === "JudgeSelect") {
       const game = await this.gameEngine.pickWinner(card);
-      this.setState({
-        game: game,
-      });
 
-      this.refreshViewState();
+      this.refreshViewState({ game });
     } else if (this.state.game.state === "Playing") {
       const game = await this.gameEngine.submitCard(card);
-      this.setState({
-        game: game,
-      });
 
-      this.refreshViewState();
+      this.refreshViewState({ game });
     }
   }
 
   ownerWaiting(game, viewState) {
-    return <OwnerWaiting players={game.players} startGame={this.startGame} minimumPlayers={game.minimumPlayers}/>;
+    return (
+      <OwnerWaiting
+        players={game.players}
+        startGame={this.startGame}
+        minimumPlayers={game.minimumPlayers}
+      />
+    );
   }
 
   newPlayerForm(game, viewState) {
@@ -295,13 +287,12 @@ class PlayGame extends React.Component {
   }
 
   playerWaiting(game, viewState) {
-    const playerIndex = game.players.indexOf(
-      this.state.viewState.currentPlayer
+    const playerIndex = game.players.findIndex(
+      (p) => p.id === this.state.viewState.currentPlayer.id
     );
-    const matchingSubmissions = game.submissions.filter(
+    const submission = game.submissions.find(
       (s) => s.playerIndex === playerIndex
     );
-    const submission = matchingSubmissions[0];
     const whiteCardText = this.lookupWhiteCard(submission.cardId);
 
     return (
@@ -371,20 +362,25 @@ class PlayGame extends React.Component {
     const viewState = this.state.viewState.state;
 
     var switchDict = {
-      OwnerWaiting:     this.ownerWaiting,
-      NewPlayerForm:    this.newPlayerForm,
+      OwnerWaiting: this.ownerWaiting,
+      NewPlayerForm: this.newPlayerForm,
       NewPlayerWaiting: this.newPlayerWaiting,
-      JudgeWaiting:     this.judgeWaiting,
-      PlayerSelect:     this.playerSelect,
-      PlayerWaiting:    this.playerWaiting,
-      JudgeSelect:      this.judgeSelect,
-      Reveal:           this.reveal,
-      Loading:          this.notLoaded,
+      JudgeWaiting: this.judgeWaiting,
+      PlayerSelect: this.playerSelect,
+      PlayerWaiting: this.playerWaiting,
+      JudgeSelect: this.judgeSelect,
+      Reveal: this.reveal,
+      Loading: this.notLoaded,
     };
+
+    // ensure the websocket for all states where the game object should be refreshed
+    if (!["Loading", "NewPlayerForm"].includes(viewState)) {
+      this.gameEngine.ensureWebSocket();
+    }
 
     let fn = switchDict[viewState];
 
-    if (fn === null) {
+    if (!fn || typeof fn === undefined ) {
       fn = this.notLoaded;
     }
 
