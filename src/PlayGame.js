@@ -396,21 +396,19 @@ class PlayGame extends React.Component {
   }
 
   playerWaiting(game, viewState) {
-    const playerIndex = game.players.findIndex(
-      (p) => p.id === this.state.viewState.currentPlayer.id
-    );
-    const submission = game.submissions.find(
-      (s) => s.playerIndex === playerIndex
-    );
-    const whiteCardText = this.lookupWhiteCard(submission.cardId);
+    const judge = game.players[game.currentJudgeIndex];
 
-    const judgeName = game.players[game.currentJudgeIndex].name;
+    const submissions = this.state.game.submissions.map((s) => {
+      return {
+        id: s.id,
+        text: this.lookupWhiteCard(s.cardId),
+      };
+    });
 
     const submittedCardsHtml = submissions.map((s) => (
       <WhiteCard
         key={s.id}
         card={s}
-        cardSelected={this.cardSelected}
         orientation="horizontal"
       />
     ));
@@ -418,7 +416,7 @@ class PlayGame extends React.Component {
     return (
       <div>
         <p>
-          {judgeName} is judging - wait for their decision.
+          {judge.name} is judging - wait for their decision.
         </p>
         <div className="cards">
           <BlackCard text={this.lookupBlackCard(game.currentBlackCard)} />
