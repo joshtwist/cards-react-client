@@ -251,33 +251,49 @@ class PlayGame extends React.Component {
   }
 
   async startGame() {
-    const game = await this.gameEngine.startGame();
-    this.refreshViewState({ game });
+    try {
+      const game = await this.gameEngine.startGame();
+      this.refreshViewState({ game });
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
   }
 
   async nextRound() {
-    const game = await this.gameEngine.nextRound();
-    this.refreshViewState({ game });
+    try {
+      const game = await this.gameEngine.nextRound();
+      this.refreshViewState({ game });
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
   }
 
   async redeal(evt) {
     evt.preventDefault();
-    if (window.confirm(`Are you sure you want to exchange your cards?`)) {
-      const game = await this.gameEngine.redeal();
-      this.refreshViewState({ game });
+    try {
+      if (window.confirm(`Are you sure you want to exchange your cards?`)) {
+        const game = await this.gameEngine.redeal();
+        this.refreshViewState({ game });
+      }
+    } catch (err) {
+      alert(`Error: ${err.message}`);
     }
   }
 
   async cardSelected(card) {
-    const viewState = this.state.viewState.state;
-    if (viewState === "JudgeSelect") {
-      const game = await this.gameEngine.pickWinner(card);
+    try {
+      const viewState = this.state.viewState.state;
+      if (viewState === "JudgeSelect") {
+        const game = await this.gameEngine.pickWinner(card);
 
-      this.refreshViewState({ game });
-    } else if (this.state.game.state === "Playing") {
-      const game = await this.gameEngine.submitCard(card);
+        this.refreshViewState({ game });
+      } else if (this.state.game.state === "Playing") {
+        const game = await this.gameEngine.submitCard(card);
 
-      this.refreshViewState({ game });
+        this.refreshViewState({ game });
+      }
+    } catch (err) {
+      alert(`Error: ${err.message}`);
     }
   }
 
