@@ -40,7 +40,9 @@ class GameEngine {
   }
 
   join() {
-    const ws = new WebSocket(`wss://${this.hostname }/websocket/${this.game.id}`);
+    const ws = new WebSocket(
+      `wss://${this.hostname}/websocket/${this.game.id}`
+    );
     let rejoined = false;
     const startTime = Date.now();
 
@@ -55,7 +57,7 @@ class GameEngine {
         return;
       }
       this.game = data;
-      this.gameUpdatedHandlers.forEach(handler => {
+      this.gameUpdatedHandlers.forEach((handler) => {
         handler(this.game);
       });
     });
@@ -107,18 +109,16 @@ class GameEngine {
     const userObject = this.getUserObject();
 
     if (userObject !== null) {
-      const playerArray = game.players.filter(
-        (p) => p.id === userObject.userId
-      );
-      viewState.currentPlayer = playerArray[0];
+
+      viewState.currentPlayer = game.players.find(p => p.id === userObject.userId);
 
       if (game.currentJudgeIndex > -1) {
         viewState.isJudge =
           game.players[game.currentJudgeIndex].id === userObject.userId;
       }
 
-      const owners = game.players.filter((p) => p.isGameOwner === true);
-      viewState.isOwner = owners[0].id === userObject.userId;
+      const owner = game.players.find(p => p.isGameOwner === true);
+      viewState.isOwner = owner ? true : false;
 
       if (game.state === "Playing") {
         const playerIndex = game.players.indexOf(viewState.currentPlayer);
@@ -133,7 +133,7 @@ class GameEngine {
       case "NotStarted":
         if (viewState.isOwner) {
           viewState.state = "OwnerWaiting";
-        } else if (viewState.currentPlayer !== null) {
+        } else if (viewState.currentPlayer) {
           viewState.state = "NewPlayerWaiting";
         } else {
           viewState.state = "NewPlayerForm";
@@ -172,11 +172,14 @@ class GameEngine {
 
   getUserObject() {
     const uoString = localStorage.getItem(this.userIdKey);
-    // ensure correct format etc
-    const userObject = JSON.parse(uoString);
 
-    if (this.game && this.game.id === userObject.gameId) {
-      return userObject;
+    if (typeof uoString === "string" && uoString.length > 0) {
+      // ensure correct format etc
+      const userObject = JSON.parse(uoString);
+
+      if (this.game && this.game.id === userObject.gameId) {
+        return userObject;
+      }
     }
     // we only return this if it matches the current game id
     return null;
