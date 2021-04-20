@@ -83,7 +83,7 @@ class OwnerWaiting extends React.Component {
         </div>
       );
     } else {
-      shareHtml = (<a href={document.location.href}>{document.location.href}</a>);
+      shareHtml = <a href={document.location.href}>{document.location.href}</a>;
     }
 
     return (
@@ -242,9 +242,12 @@ class PlayGame extends React.Component {
   }
 
   async joinGame(player) {
-    const game = await this.gameEngine.joinGame({ player: player });
-
-    this.refreshViewState({ game });
+    try {
+      const game = await this.gameEngine.joinGame({ player: player });
+      this.refreshViewState({ game });
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
   }
 
   async startGame() {

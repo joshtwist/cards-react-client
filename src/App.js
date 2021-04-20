@@ -12,12 +12,16 @@ class App extends React.Component {
 
   async createGame(data) {
     const gameEngine = new GameEngine();
-    const result = await gameEngine.createGame({
-      player: data,
-      minimumPlayers: 2,
-    });
+    try {
+      const result = await gameEngine.createGame({
+        player: data,
+        minimumPlayers: 2,
+      });
 
-    window.location.href = `/${result.id}`;
+      window.location.href = `/${result.id}`;
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
   }
 
   render() {
