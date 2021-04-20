@@ -404,6 +404,40 @@ class PlayGame extends React.Component {
     );
     const whiteCardText = this.lookupWhiteCard(submission.cardId);
 
+    const judgeName = game.players[game.currentJudgeIndex].name;
+
+    const submittedCardsHtml = submissions.map((s) => (
+      <WhiteCard
+        key={s.id}
+        card={s}
+        cardSelected={this.cardSelected}
+        orientation="horizontal"
+      />
+    ));
+
+    return (
+      <div>
+        <p>
+          {judgeName} is judging - wait for their decision.
+        </p>
+        <div className="cards">
+          <BlackCard text={this.lookupBlackCard(game.currentBlackCard)} />
+        </div>
+        <p>Submissions:</p>
+        <div class="cardsHorizontal">{submittedCardsHtml}</div>
+      </div>
+    );
+  }
+
+  playerSubmitted(game, viewState) {
+    const playerIndex = game.players.findIndex(
+      (p) => p.id === this.state.viewState.currentPlayer.id
+    );
+    const submission = game.submissions.find(
+      (s) => s.playerIndex === playerIndex
+    );
+    const whiteCardText = this.lookupWhiteCard(submission.cardId);
+
     return (
       <div>
         <p>
@@ -491,6 +525,7 @@ class PlayGame extends React.Component {
       NewPlayerWaiting: this.newPlayerWaiting,
       JudgeWaiting: this.judgeWaiting,
       PlayerSelect: this.playerSelect,
+      PlayerSubmitted: this.playerSubmitted,
       PlayerWaiting: this.playerWaiting,
       JudgeSelect: this.judgeSelect,
       Reveal: this.reveal,
