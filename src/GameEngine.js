@@ -1,6 +1,6 @@
 class GameEngine {
   constructor() {
-    this.domain = "https://cf_cards.molmorg.workers.dev/";
+    this.domain = "https://cfcards.molmorg.workers.dev/";
     this.hostname = new URL(this.domain).host;
     this.userIdKey = "cards-userId";
     this.game = null;
