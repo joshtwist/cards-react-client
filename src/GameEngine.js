@@ -118,7 +118,7 @@ class GameEngine {
       }
 
       const owner = game.players.find(p => p.isGameOwner === true);
-      viewState.isOwner = owner ? true : false;
+      viewState.isOwner = owner.id === viewState.currentPlayer.id;
 
       if (game.state === "Playing") {
         const playerIndex = game.players.indexOf(viewState.currentPlayer);
