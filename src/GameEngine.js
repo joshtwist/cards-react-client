@@ -244,6 +244,15 @@ class GameEngine {
     return game;
   }
 
+  async redeal() {
+    const request = this.createRequest(`/games/${this.game.id}/redeal`, "POST");
+    const response = await fetch(request);
+    const game = await response.json();
+
+    this.game = game;
+    return game;
+  }
+
   async joinGame(payload) {
     const request = this.createRequest(
       `/games/${this.game.id}/join`,

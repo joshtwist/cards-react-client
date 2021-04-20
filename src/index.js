@@ -9,6 +9,8 @@ ReactDOM.render(
     <div className="bodyWrapper">
       <App />
     </div>
+    <p>_________________</p>
+    <a href="/">New Game</a> | Made by <a href="https://twitter.com/joshtwist">@joshtwist</a> | Uses <a href="https://cardsagainsthumanity.com/">CAH</a> material under <a href="https://creativecommons.org/licenses/by-nc-sa/2.0/">Creative Commons BY-NC-SA 2.0 license</a>
   </React.StrictMode>,
   document.getElementById('root')
 );

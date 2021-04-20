@@ -1,7 +1,7 @@
 import React from "react";
 import PlayGame from "./PlayGame";
 import GameEngine from "./GameEngine.js";
-import NewPlayerForm from "./NewPlayerForm"
+import NewPlayerForm from "./NewPlayerForm";
 
 class App extends React.Component {
   constructor(props) {
@@ -14,7 +14,7 @@ class App extends React.Component {
     const gameEngine = new GameEngine();
     const result = await gameEngine.createGame({
       player: data,
-      minimumPlayers: 2
+      minimumPlayers: 2,
     });
 
     window.location.href = `/${result.id}`;
@@ -24,7 +24,25 @@ class App extends React.Component {
     const path = new URL(document.location.href).pathname;
 
     if (path === "/") {
-      return <NewPlayerForm submitted={this.createGame} buttonText="Start new game" />;
+      return (
+        <div>
+          <h1>Offensive Cards</h1>
+          <p>
+            Created in the era of coronavirus, this is a simple online
+            multiplayer version of Cards Against Humanity.
+          </p>
+          <p>
+            To get started, you just need at least 2 friends (3+ players). You
+            can create a new game by entering your name and initials below. Then
+            you just need to share the URL with your friends - they'll be able
+            to join the game until you start it.
+          </p>
+          <NewPlayerForm
+            submitted={this.createGame}
+            buttonText="Start new game"
+          />
+        </div>
+      );
     }
 
     const match = path.match(/^\/(\w{64})$/);
@@ -34,7 +52,11 @@ class App extends React.Component {
       return <PlayGame gameId={gameId} />;
     }
 
-    return <div>Invalid URL, go <a href="/">here</a> and create your own game </div>;
+    return (
+      <div>
+        Invalid URL, go <a href="/">here</a> and create your own game{" "}
+      </div>
+    );
   }
 }
 

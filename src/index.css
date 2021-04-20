@@ -1,17 +1,134 @@
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  margin: 20px;
+  font-family: "Helvetica Neue";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+button {
+  border-radius: 10px;
+  padding: 20px 35px;
+  color: black;
+  background-color: white;
+  border: 1px solid black;
+  font-weight: bold;
+  font-size: large;
 }
 
-.bodyWrapper {
-  margin: 20px;
+.cards 
+{
+  margin: 0px 0px 0px -10px;
+}
+
+.cardsHorizontal {
+  margin: 0px 0px 0px -10px;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+
+.white {
+  background-color: white;
+  color: black;
+  border: 1px solid black;
+}
+
+.black {
+  background-color: black;
+  color: white;
+  border: 1px solid white;
+}
+
+.celebrationGif {
+  width: 250px;
+}
+
+.card {
+  font-weight: bold;
+  width: 180px;
+  min-height: 180px;
+  padding: 10px;
+  vertical-align: top;
+  border-radius: 7px;
+  transform: rotate(1deg);
+  white-space: normal !important;
+  margin: 10px;
+}
+
+.horizontal {
+  display: inline-block;
+  margin: 10px -20px 10px 10px !important;
+}
+
+.vertical {
+  display: block;
+  margin: 10px 10px -20px 10px !important;
+}
+
+.players {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+input {
+  font-size: medium;
+  border-radius: 3px;
+  border: 1px solid black;
+  margin: 5px 0px;
+}
+
+.score {
+  height: 20px;
+  width: 20px;
+  border-radius: 20px;
+  line-height: 20px;
+  background-color: white;
+  color: black;
+  border: 1px solid black;
+  position: relative;
+  top:-20px;
+  line-height: 20px;
+  font-size: small;
+  font-weight:  lighter ;
+}
+
+.player {
+  font-weight: bold;
+  font-size:large;
+  vertical-align:top;
+  display: inline-block;
+  width: 70px;
+  height: 70px;
+  border-radius: 70px;
+  line-height:70px;
+  background-color:white;
+  color: black;
+  border: 1px solid black;
+  text-align:center;
+  margin: 0px 5px 0px 0px;
+}
+
+.current {
+  background-color: black;
+  color: white;
+}
+
+.badge {
+  position: relative;
+  top: -42px;
+  left: 50px;
+  height: 20px;
+  width: 15px;
+  border-radius: 3px;
+  transform: rotate(5deg);
+}
+
+.judge {
+  background-color: black;
+  border: 1px solid white;
+}
+
+.submitted {
+  background-color: white;
+  border: 1px solid black;
 }

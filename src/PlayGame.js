@@ -5,11 +5,11 @@ import NewPlayerForm from "./NewPlayerForm";
 function PlayersSoFarControl(props) {
   return (
     <div>
-      <p>Players:</p>
+      <p>Players so far:</p>
       <div>
         {props.players.map((p, i) => (
           <div>
-            {p.short} ({p.score})
+            <b>{p.name}</b> ({p.short})
           </div>
         ))}
       </div>
@@ -22,14 +22,33 @@ class WhiteCard extends React.Component {
     super(props);
 
     this.cardSelected = this.cardSelected.bind(this);
+
+    if (props.orientation && props.orientation.toLowerCase() === "horizontal") {
+      this.className = "card white horizontal";
+    } else if (
+      props.orientation &&
+      props.orientation.toLowerCase() === "vertical"
+    ) {
+      this.className = "card white vertical";
+    } else {
+      this.className = "card white";
+    }
   }
 
   cardSelected() {
+    if (!this.props.cardSelected) {
+      // no op
+      return;
+    }
     this.props.cardSelected(this.props.card);
   }
 
   render() {
-    return <div onClick={this.cardSelected}>{this.props.card.text}</div>;
+    return (
+      <div onClick={this.cardSelected} className={this.className}>
+        {this.props.card.text}
+      </div>
+    );
   }
 }
 
@@ -44,7 +63,29 @@ class OwnerWaiting extends React.Component {
     this.props.startGame();
   }
 
+  shareUrl() {
+    const shareInfo = {
+      title: "offensive.cards online",
+      text: "Join me for a game of offensive.cards",
+      url: document.location.href,
+    };
+
+    navigator.share(shareInfo);
+  }
+
   render() {
+    let shareHtml;
+
+    if (typeof navigator.share === "function") {
+      shareHtml = (
+        <div>
+          <button onClick={this.shareUrl}>Share</button>
+        </div>
+      );
+    } else {
+      shareHtml = (<a href={document.location.href}>{document.location.href}</a>);
+    }
+
     return (
       <div>
         <p>
@@ -52,9 +93,7 @@ class OwnerWaiting extends React.Component {
           {this.props.players.length} so far, including yourself.
         </p>
         <p>Invite people to join you by send them this link: </p>
-        <p>
-          <a href={document.location.href}>{document.location.href}</a>
-        </p>
+        <p>{shareHtml}</p>
         <PlayersSoFarControl players={this.props.players} />
         <p>
           {this.props.players.length >= this.props.minimumPlayers && (
@@ -67,7 +106,9 @@ class OwnerWaiting extends React.Component {
 }
 
 function BlackCard(props) {
-  return <p>{props.text.replace("_", "________")}</p>;
+  return (
+    <div className="card black">{props.text.replace("_", "________")}</div>
+  );
 }
 
 class Players extends React.Component {
@@ -99,13 +140,13 @@ class Players extends React.Component {
 
     function JudgeBadge(player) {
       if (that.isJudge(player)) {
-        return <b>J</b>;
+        return <div className="badge judge"></div>;
       }
     }
 
     function SubmittedBadge(player) {
       if (that.hasSubmitted(player)) {
-        return <i>S</i>;
+        return <div className="badge submitted"></div>;
       }
     }
 
@@ -116,16 +157,22 @@ class Players extends React.Component {
     }
 
     return (
-      <ul>
+      <div className="players">
         {players.map((p) => {
+          let className = "player";
+          if (p.id === this.props.currentPlayerId) {
+            className = "player current";
+          }
           return (
-            <li key={p.id} tooltip={p.name}>
-              {p.short} ({p.score}) {JudgeBadge(p)}
+            <div key={p.id} tooltip={p.name} className={className}>
+              {p.short}
+              <div className="score">{p.score}</div>
+              {JudgeBadge(p)}
               {SubmittedBadge(p)}
-            </li>
+            </div>
           );
         })}
-      </ul>
+      </div>
     );
   }
 }
@@ -189,6 +236,11 @@ class PlayGame extends React.Component {
     this.setState(newState);
   }
 
+  refresh(evt) {
+    evt.preventDefault();
+    document.location.reload();
+  }
+
   async joinGame(player) {
     const game = await this.gameEngine.joinGame({ player: player });
 
@@ -202,7 +254,15 @@ class PlayGame extends React.Component {
 
   async nextRound() {
     const game = await this.gameEngine.nextRound();
-    this.refreshViewState( { game });
+    this.refreshViewState({ game });
+  }
+
+  async redeal(evt) {
+    evt.preventDefault();
+    if (window.confirm(`Are you sure you want to exchange your cards?`)) {
+      const game = await this.gameEngine.redeal();
+      this.refreshViewState({ game });
+    }
   }
 
   async cardSelected(card) {
@@ -255,6 +315,9 @@ class PlayGame extends React.Component {
   judgeWaiting(game, viewState) {
     return (
       <div>
+        <div className="cards">
+          <BlackCard text={this.lookupBlackCard(game.currentBlackCard)} />
+        </div>
         <p>
           You're judging this round. Hold tight, we have{" "}
           {game.submissions.length}/{game.players.length - 1} entries so far.
@@ -272,16 +335,43 @@ class PlayGame extends React.Component {
     });
 
     const cardsHtml = cards.map((c) => (
-      <li key={c.id}>
-        <WhiteCard card={c} cardSelected={this.cardSelected} />
-      </li>
+      <WhiteCard
+        key={c.id}
+        card={c}
+        cardSelected={this.cardSelected}
+        orientation="vertical"
+      />
     ));
+
+    let redealButton = (
+      <a href="#" onClick={this.redeal}>
+        Do it!
+      </a>
+    );
+    let redealsHtml;
+    const redealsLeft = this.state.viewState.currentPlayer.redealsLeft;
+
+    if (redealsLeft === 0) {
+      redealsHtml = <p>You have no redeals remaining.</p>;
+    } else if (redealsLeft === 1) {
+      redealsHtml = <p>You have one redeal remaining. {redealButton}</p>;
+    } else {
+      redealsHtml = (
+        <p>
+          You have {redealsLeft} redeals remaining. {redealButton}
+        </p>
+      );
+    }
 
     return (
       <div>
-        <BlackCard text={this.lookupBlackCard(game.currentBlackCard)} />
-        {cards.length} card(s).
-        <ul>{cardsHtml}</ul>
+        <div className="cards">
+          <BlackCard text={this.lookupBlackCard(game.currentBlackCard)} />
+        </div>
+        <p></p>
+        <div className="cards">{cardsHtml}</div>
+        <p>&nbsp;</p>
+        {redealsHtml}
       </div>
     );
   }
@@ -301,9 +391,13 @@ class PlayGame extends React.Component {
           Please wait: {game.submissions.length}/{game.players.length - 1}{" "}
           submissions so far.
         </p>
-        <BlackCard text={this.lookupBlackCard(game.currentBlackCard)} />
+        <div className="cards">
+          <BlackCard text={this.lookupBlackCard(game.currentBlackCard)} />
+        </div>
         <p>You submitted:</p>
-        <WhiteCard card={{ text: whiteCardText }} />
+        <div className="cards">
+          <WhiteCard card={{ text: whiteCardText }} />
+        </div>
       </div>
     );
   }
@@ -317,16 +411,21 @@ class PlayGame extends React.Component {
     });
 
     const submittedCardsHtml = submissions.map((s) => (
-      <li key={s.id}>
-        <WhiteCard card={s} cardSelected={this.cardSelected} />
-      </li>
+      <WhiteCard
+        key={s.id}
+        card={s}
+        cardSelected={this.cardSelected}
+        orientation="horizontal"
+      />
     ));
 
     return (
       <div>
-        <BlackCard text={this.lookupBlackCard(game.currentBlackCard)} />
-        {submissions.length} card(s).
-        <ol>{submittedCardsHtml}</ol>
+        <div className="cards">
+          <BlackCard text={this.lookupBlackCard(game.currentBlackCard)} />
+        </div>
+        <p>Select a winning card:</p>
+        <div class="cardsHorizontal">{submittedCardsHtml}</div>
       </div>
     );
   }
@@ -345,9 +444,15 @@ class PlayGame extends React.Component {
     return (
       <div>
         <h1>Winner!</h1>
-        <img src={lr.gifUrl} alt="Celebration animation" />
+        <img
+          src={lr.gifUrl}
+          alt="Celebration animation"
+          className="celebrationGif"
+        />
         <p>{player.name} 👏👏👏</p>
-        <BlackCard text={blackCardText.replace("_", whiteCardText)} />
+        <div className="cards">
+          <BlackCard text={blackCardText.replace("_", whiteCardText)} />
+        </div>
         {nextRound}
       </div>
     );
@@ -380,7 +485,7 @@ class PlayGame extends React.Component {
 
     let fn = switchDict[viewState];
 
-    if (!fn || typeof fn === undefined ) {
+    if (!fn || typeof fn === undefined) {
       fn = this.notLoaded;
     }
 
@@ -388,10 +493,23 @@ class PlayGame extends React.Component {
   }
 
   render() {
+    let currentPlayerId = -1;
+    if (this.state.viewState.currentPlayer) {
+      currentPlayerId = this.state.viewState.currentPlayer.id;
+    }
     return (
       <div>
-        <Players game={this.state.game} />
+        <Players game={this.state.game} currentPlayerId={currentPlayerId} />
+        <p>&nbsp;</p>
         {this.mainViewSwitch()}
+        <p>&nbsp;</p>
+        <p>
+          Having trouble? Try{" "}
+          <a href="#" onClick={this.refresh}>
+            refreshing
+          </a>
+          .
+        </p>
       </div>
     );
   }
