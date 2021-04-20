@@ -44,7 +44,7 @@ class NewPlayerForm extends React.Component {
           <input
             autoComplete="off"
             type="text"
-            placeholder="Your Name"
+            placeholder="Your name"
             value={this.state.name}
             onChange={this.handleNameChange}
             maxLength="30"
@@ -53,8 +53,9 @@ class NewPlayerForm extends React.Component {
         <div>Enter two initials, e.g. JS</div>
         <div>
           <input
+            className="upper"
             autoComplete="off"
-            placeholder="JS"
+            placeholder="AB"
             onChange={this.handleShortChange}
             maxLength="2"
             value={this.state.short}

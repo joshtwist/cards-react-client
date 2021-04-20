@@ -5,6 +5,21 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+input {
+  padding: 10px;
+  font-weight: bold;
+  font-family: "Helvetica Neue";
+  border-radius: 3px;
+  border: 1px solid black;
+  margin-bottom: 15px;  
+  margin-top: 5px;
+  font-size: medium;
+}
+
+input.upper {
+  text-transform: uppercase;
+}
+
 button {
   border-radius: 10px;
   padding: 20px 35px;
@@ -70,12 +85,7 @@ button {
   white-space: nowrap;
 }
 
-input {
-  font-size: medium;
-  border-radius: 3px;
-  border: 1px solid black;
-  margin: 5px 0px;
-}
+
 
 .score {
   height: 20px;
